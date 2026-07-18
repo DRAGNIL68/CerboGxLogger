@@ -5,11 +5,17 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.jetbrains.annotations.NotNull;
 
+import javax.net.ssl.*;
+import java.net.Socket;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+
 public class MqttManager {
 
     private MqttManager() {}
 
-    private volatile MqttClient mqttClient;
+    private volatile MqttClient mqttClient = null;
     private volatile String uri; private volatile String password;
     private volatile String clientId; private volatile String username;
 
@@ -22,7 +28,8 @@ public class MqttManager {
     }
 
     public synchronized void connect(@NotNull String uri, @NotNull String password,@NotNull String username){
-        if (mqttClient != null)
+
+        if (this.mqttClient != null)
             return;
 
         this.uri = uri; this.password = password; this.username = username;
@@ -32,21 +39,70 @@ public class MqttManager {
         try {
             this.mqttClient = new MqttClient(uri, clientId);
         } catch (MqttException e) {
-            Launcher.getLogger().warn("CerboGx URI path was invalid");
+            Launcher.getLogger().error("CerboGx URI path was invalid");
+            return;
         }
+
+        //i dont like this will fix once i am back
+        TrustManager [] trustAllCerts = new TrustManager [] {new X509ExtendedTrustManager() {
+            @Override
+            public void checkClientTrusted (X509Certificate [] chain, String authType, Socket socket) {
+
+            }
+
+            @Override
+            public void checkServerTrusted (X509Certificate [] chain, String authType, Socket socket) {
+
+            }
+
+            @Override
+            public void checkClientTrusted (X509Certificate [] chain, String authType, SSLEngine engine) {
+
+            }
+
+            @Override
+            public void checkServerTrusted (X509Certificate [] chain, String authType, SSLEngine engine) {
+
+            }
+
+            @Override
+            public java.security.cert.X509Certificate [] getAcceptedIssuers () {
+                return null;
+            }
+
+            @Override
+            public void checkClientTrusted (X509Certificate [] certs, String authType) {
+            }
+
+            @Override
+            public void checkServerTrusted (X509Certificate [] certs, String authType) {
+            }
+
+        }};
+
+        SSLContext sc = null;
+        try {
+            sc = SSLContext.getInstance ("TLS");
+            sc.init (null, trustAllCerts, new java.security.SecureRandom ());
+        } catch (KeyManagementException | NoSuchAlgorithmException e) {
+            e.printStackTrace ();
+        }
+
 
         MqttConnectOptions options = new MqttConnectOptions();
         options.setUserName(username);
         options.setPassword(password.toCharArray());
+        options.setConnectionTimeout(10);
+        options.setSocketFactory(sc.getSocketFactory());
 
         try {
-            mqttClient.connect(options);
+            this.mqttClient.connect(options);
+            Launcher.getLogger().info("connected to {}", uri);
+            subscribe();
 
-        } catch (Exception e) {
-            Launcher.getLogger().warn("password was invalid");
+        } catch (MqttException e) {
+            Launcher.getLogger().error("failed to connect: "+e.getCause());
         }
-        Launcher.getLogger().warn("connected to {}", uri);
-        subscribe();
     }
 
     public void disconnect() throws MqttException {

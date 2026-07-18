@@ -19,8 +19,6 @@ public class Application extends javafx.application.Application {
     public void start(Stage stage) throws IOException {
 
 
-
-
         FXMLLoader fxmlLoader = new FXMLLoader(Application.class.getResource("hello-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 320, 240);
         stage.setTitle("Hello!");
@@ -28,16 +26,7 @@ public class Application extends javafx.application.Application {
         stage.show();
 
 
-        try {
-            String clientId = MqttClient.generateClientId();
-            IMqttClient iMqttClient = new MqttClient("tcp://iot.eclipse.org:1883", clientId);
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setUserName("foo");
-            options.setPassword("bar".toCharArray());
 
-        } catch (MqttException e) {
-            throw new RuntimeException(e);
-        }
     }
 
 }
