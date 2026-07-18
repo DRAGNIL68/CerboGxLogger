@@ -43,42 +43,8 @@ public class MqttManager {
             return;
         }
 
-        //i dont like this will fix once i am back
-        TrustManager [] trustAllCerts = new TrustManager [] {new X509ExtendedTrustManager() {
-            @Override
-            public void checkClientTrusted (X509Certificate [] chain, String authType, Socket socket) {
-
-            }
-
-            @Override
-            public void checkServerTrusted (X509Certificate [] chain, String authType, Socket socket) {
-
-            }
-
-            @Override
-            public void checkClientTrusted (X509Certificate [] chain, String authType, SSLEngine engine) {
-
-            }
-
-            @Override
-            public void checkServerTrusted (X509Certificate [] chain, String authType, SSLEngine engine) {
-
-            }
-
-            @Override
-            public java.security.cert.X509Certificate [] getAcceptedIssuers () {
-                return null;
-            }
-
-            @Override
-            public void checkClientTrusted (X509Certificate [] certs, String authType) {
-            }
-
-            @Override
-            public void checkServerTrusted (X509Certificate [] certs, String authType) {
-            }
-
-        }};
+        //i don't like this will fix once I am back
+        TrustManager[] trustAllCerts = new TrustManager[] { new CustomTrustManager()};
 
         SSLContext sc = null;
         try {
